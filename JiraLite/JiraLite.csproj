@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Application\Dtos\" />
       <Folder Include="Application\Interfaces\" />
       <Folder Include="Application\Services\" />
       <Folder Include="Controllers\" />
