@@ -1,0 +1,131 @@
+@model JiraLite.Application.Dtos.User.RegisterDto
+
+@{
+    ViewData["Title"] = "Register";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>@ViewData["Title"] - JiraLite</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+</head>
+<body class="bg-light">
+<div class="container">
+    <div class="row justify-content-center min-vh-100 align-items-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h2 class="card-title text-center mb-4">Create Account</h2>
+
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <div id="alertContainer"></div>
+
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input id="name" name="name" class="form-control" placeholder="Enter your full name" required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input id="email" name="email" class="form-control" type="email" placeholder="Enter your email" required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input id="password" name="password" class="form-control" type="password" placeholder="Create a strong password" required/>
+                            <div class="form-text">
+                                Must be 8+ characters with uppercase, lowercase, number and special character
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3">Create Account</button>
+
+                        <div class="text-center border-top pt-3">
+                            Already have an account? <a asp-action="Login" class="text-decoration-none">Sign In</a>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Check if user is already logged in
+        if (localStorage.getItem('token')) {
+            window.location.href = '/Dashboard';
+        }
+
+        $('#registerForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            var name = $('#name').val();
+            var email = $('#email').val();
+            var password = $('#password').val();
+            
+            var alertContainer = $('#alertContainer');
+            alertContainer.html('');
+            
+            $.ajax({
+                url: '/api/auth/register',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    name: name,
+                    email: email,
+                    password: password
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        alertContainer.html(
+                            '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                            response.message + ' Redirecting to login...' +
+                            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                            '</div>'
+                        );
+                        
+                        // Redirect to login page
+                        setTimeout(function() {
+                            window.location.href = '/Account/Login';
+                        }, 2000);
+                    }
+                },
+                error: function(xhr) {
+                    var errorMessage = 'An error occurred. Please try again.';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = xhr.responseJSON.errors.join(', ');
+                    }
+                    
+                    alertContainer.html(
+                        '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                        errorMessage +
+                        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                        '</div>'
+                    );
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

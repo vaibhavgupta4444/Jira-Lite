@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace JiraLite.Application.Dtos.User;
-public class SignIn
+
+public class LoginDto
 {
     [Required]
     [EmailAddress]

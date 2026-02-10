@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace JiraLite.Application.Dtos.User;
-
-public class SignUp
+public class RegisterDto
 {
     [Required]
     public string Name { get; set; } = string.Empty;

@@ -1,0 +1,94 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="card bg-primary text-white mb-4">
+    <div class="card-body">
+        <h2 class="card-title mb-2">Welcome, <span id="userName"></span>!</h2>
+        <p class="card-text mb-0">You are successfully logged in to JiraLite</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold" style="width: 120px;">Name:</td>
+                            <td id="userNameDisplay"></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Email:</td>
+                            <td id="userEmail"></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Role:</td>
+                            <td><span class="badge bg-primary" id="userRole"></span></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">JWT Token:</td>
+                            <td>
+                                <div class="bg-light p-2 rounded font-monospace small" style="word-break: break-all;" id="userToken">
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Coming Soon</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">• Issue Management</li>
+                    <li class="mb-2">• Create & Edit Issues</li>
+                    <li class="mb-2">• Comments System</li>
+                    <li class="mb-2">• History Tracking</li>
+                    <li class="mb-2">• Excel Upload</li>
+                    <li class="mb-0">• Workflow Rules</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info" role="alert">
+    <h6 class="alert-heading">Session Information</h6>
+    <p class="mb-0">Your session is active. You can use your JWT token to make authenticated API requests.</p>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Check if user is logged in
+            var token = localStorage.getItem('token');
+            
+            if (!token) {
+                // Redirect to login if no token
+                window.location.href = '/Account/Login';
+                return;
+            }
+            
+            // Display user information from localStorage
+            var userName = localStorage.getItem('userName') || 'User';
+            var userEmail = localStorage.getItem('userEmail') || 'N/A';
+            var userRole = localStorage.getItem('userRole') || 'User';
+            
+            $('#userName').text(userName);
+            $('#userNameDisplay').text(userName);
+            $('#userEmail').text(userEmail);
+            $('#userRole').text(userRole);
+            $('#userToken').text(token);
+        });
+    </script>
+}
