@@ -59,11 +59,12 @@ public class AuthController : ControllerBase
             return StatusCode(500, new
             {
                 success = false,
-                message = "An error occurred during registration"
+                message = "An error occurred during registration",
+                error = ex.Message
             });
         }
     }
-
+    
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
@@ -83,6 +84,13 @@ public class AuthController : ControllerBase
 
             var response = await _authService.LoginAsync(dto);
 
+            // Also create server-side session for MVC form compatibility
+            HttpContext.Session.SetString("Token", response.Token);
+            HttpContext.Session.SetString("UserId", response.UserId);
+            HttpContext.Session.SetString("UserName", response.Name);
+            HttpContext.Session.SetString("UserEmail", response.Email);
+            HttpContext.Session.SetString("UserRole", response.Role);
+
             return Ok(new
             {
                 success = true,
@@ -90,6 +98,7 @@ public class AuthController : ControllerBase
                 data = new
                 {
                     token = response.Token,
+                    userId = response.UserId,
                     email = response.Email,
                     name = response.Name,
                     role = response.Role
@@ -109,7 +118,8 @@ public class AuthController : ControllerBase
             return StatusCode(500, new
             {
                 success = false,
-                message = "An error occurred during login"
+                message = "An error occurred during login",
+                error = ex.Message
             });
         }
     }

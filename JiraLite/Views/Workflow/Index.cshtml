@@ -1,0 +1,154 @@
+@model List<JiraLite.Application.Dtos.Workflow.WorkflowTransitionDto>
+@{
+    ViewData["Title"] = "Workflow Configuration";
+    var allStatuses = ViewBag.AllStatuses as List<JiraLite.Domain.Enums.IssueStatus> ?? new List<JiraLite.Domain.Enums.IssueStatus>();
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Workflow Configuration</h2>
+            <p class="text-muted">Define allowed status transitions for issues. If no transitions are defined, all status changes are allowed.</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Add New Workflow Transition</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post" class="row g-3">
+                <div class="col-md-5">
+                    <label for="FromStatus" class="form-label">From Status</label>
+                    <select name="FromStatus" id="FromStatus" class="form-select" required>
+                        <option value="">Select Status</option>
+                        @foreach (var status in allStatuses)
+                        {
+                            <option value="@((int)status)">@status</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label for="ToStatus" class="form-label">To Status</label>
+                    <select name="ToStatus" id="ToStatus" class="form-select" required>
+                        <option value="">Select Status</option>
+                        @foreach (var status in allStatuses)
+                        {
+                            <option value="@((int)status)">@status</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Add Transition</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Existing Workflow Transitions</h5>
+        </div>
+        <div class="card-body">
+            @if (Model.Count == 0)
+            {
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle"></i> No workflow transitions configured. All status changes are currently allowed.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>From Status</th>
+                                <th>To Status</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var transition in Model.OrderBy(t => t.FromStatusName).ThenBy(t => t.ToStatusName))
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary">@transition.FromStatusName</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@transition.ToStatusName</span>
+                                    </td>
+                                    <td>
+                                        @if (transition.IsActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">Inactive</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <form asp-action="Toggle" method="post" style="display: inline;">
+                                            <input type="hidden" name="id" value="@transition.Id" />
+                                            <button type="submit" class="btn btn-sm btn-warning">
+                                                @(transition.IsActive ? "Deactivate" : "Activate")
+                                            </button>
+                                        </form>
+                                        <form asp-action="Delete" method="post" style="display: inline;" 
+                                              onsubmit="return confirm('Are you sure you want to delete this workflow transition?');">
+                                            <input type="hidden" name="id" value="@transition.Id" />
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4">
+                    <h6>Workflow Visualization</h6>
+                    <div class="alert alert-light">
+                        @foreach (var group in Model.Where(t => t.IsActive).GroupBy(t => t.FromStatus))
+                        {
+                            <div class="mb-2">
+                                <strong>@group.First().FromStatusName</strong> → 
+                                @string.Join(", ", group.Select(t => t.ToStatusName))
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+}

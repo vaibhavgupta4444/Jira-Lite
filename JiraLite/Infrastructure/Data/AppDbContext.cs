@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Issue> Issues { get; set; }
     public DbSet<IssueComment> IssueComments { get; set; }
     public DbSet<IssueHistory> IssueHistories { get; set; }
+    public DbSet<WorkflowTransition> WorkflowTransitions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,6 +38,10 @@ public class AppDbContext : DbContext
         
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
+            .IsUnique();
+        
+        modelBuilder.Entity<WorkflowTransition>()
+            .HasIndex(wt => new { wt.FromStatus, wt.ToStatus })
             .IsUnique();
     }
 }

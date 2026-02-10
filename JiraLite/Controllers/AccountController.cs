@@ -71,6 +71,7 @@ public class AccountController : Controller
             var response = await _authService.LoginAsync(model);
 
             HttpContext.Session.SetString("Token", response.Token);
+            HttpContext.Session.SetString("UserId", response.UserId);
             HttpContext.Session.SetString("UserName", response.Name);
             HttpContext.Session.SetString("UserEmail", response.Email);
             HttpContext.Session.SetString("UserRole", response.Role);
@@ -95,7 +96,15 @@ public class AccountController : Controller
     [HttpGet]
     public IActionResult Logout()
     {
-        // Return a view that will clear localStorage using JavaScript
         return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult LogoutConfirm()
+    {
+        HttpContext.Session.Clear();
+        TempData["SuccessMessage"] = "You have been logged out successfully.";
+        return RedirectToAction(nameof(Login));
     }
 }

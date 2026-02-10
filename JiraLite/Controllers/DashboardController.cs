@@ -1,13 +1,22 @@
+using JiraLite.Application.Interfaces;
+using JiraLite.Infrastructure.Security;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JiraLite.Controllers;
 
+[SessionAuthorization]
 public class DashboardController : Controller
 {
-    
-    public IActionResult Index()
+    private readonly IIssueService _issueService;
+
+    public DashboardController(IIssueService issueService)
     {
-        // Just return the view - authentication is handled by localStorage on frontend
-        return View();
+        _issueService = issueService;
+    }
+    
+    public async Task<IActionResult> Index()
+    {
+        var issues = await _issueService.GetAllIssuesAsync();
+        return View(issues);
     }
 }

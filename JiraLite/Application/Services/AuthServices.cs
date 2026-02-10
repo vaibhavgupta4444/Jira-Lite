@@ -27,10 +27,12 @@ public class AuthService : IAuthService
         {
             Name = dto.Name,
             Email = dto.Email,
-            Password = PasswordHasher.Hash(dto.Password),
-            CreatedBy = dto.Email,
-            UpdatedBy = dto.Email
+            Password = PasswordHasher.Hash(dto.Password)
         };
+        
+        // Set CreatedBy and UpdatedBy after user is created to use its own ID
+        user.CreatedBy = user.Id;
+        user.UpdatedBy = user.Id;
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
@@ -60,6 +62,7 @@ public class AuthService : IAuthService
         return new AuthResponseDto
         {
             Token = token,
+            UserId = user.Id.ToString(),
             Email = user.Email,
             Name = user.Name,
             Role = user.Role.ToString(),

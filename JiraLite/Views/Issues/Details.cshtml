@@ -1,0 +1,429 @@
+@model JiraLite.Application.Dtos.Issue.IssueResponseDto
+
+@{
+    ViewData["Title"] = "Issue Details";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0"><i class="bi bi-info-circle"></i> Issue Details</h3>
+                        <div>
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-light btn-sm">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h2 class="mb-3">@Model.Title</h2>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Type:</strong>
+                            @if (Model.Type == JiraLite.Domain.Enums.IssueType.Bug)
+                            {
+                                <span class="badge bg-danger">Bug</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info">Task</span>
+                            }
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Priority:</strong>
+                            @switch (Model.Priority)
+                            {
+                                case JiraLite.Domain.Enums.Priority.High:
+                                    <span class="badge bg-danger">High</span>
+                                    break;
+                                case JiraLite.Domain.Enums.Priority.Medium:
+                                    <span class="badge bg-warning">Medium</span>
+                                    break;
+                                case JiraLite.Domain.Enums.Priority.Low:
+                                    <span class="badge bg-secondary">Low</span>
+                                    break;
+                            }
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Status:</strong>
+                            @switch (Model.Status)
+                            {
+                                case JiraLite.Domain.Enums.IssueStatus.Open:
+                                    <span class="badge bg-primary">Open</span>
+                                    break;
+                                case JiraLite.Domain.Enums.IssueStatus.InProgress:
+                                    <span class="badge bg-warning text-dark">In Progress</span>
+                                    break;
+                                case JiraLite.Domain.Enums.IssueStatus.Closed:
+                                    <span class="badge bg-success">Done</span>
+                                    break;
+                                case JiraLite.Domain.Enums.IssueStatus.Reopened:
+                                    <span class="badge bg-info">Reopened</span>
+                                    break;
+                            }
+                        </div>
+                        <div class="col-md-3">
+                            <strong>ID:</strong>
+                            <small class="text-muted">@Model.Id.ToString().Substring(0, 8)</small>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="row mb-3" id="statusTransitionsRow" style="display: none;">
+                        <div class="col-md-12">
+                            <h5>Quick Status Actions</h5>
+                            <div id="statusTransitionButtons" class="d-flex gap-2 flex-wrap"></div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <h5>Description</h5>
+                            <p class="text-muted">@Model.Description</p>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Created By ID:</strong> <small class="text-muted">@Model.CreatedBy</small></p>
+                            <p><strong>Created On:</strong> @Model.Created.ToLocalTime().ToString("MMMM dd, yyyy hh:mm tt")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Updated By ID:</strong> <small class="text-muted">@Model.UpdatedBy</small></p>
+                            <p><strong>Updated On:</strong> @Model.Updated.ToLocalTime().ToString("MMMM dd, yyyy hh:mm tt")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-chat-left-text"></i> Comments</h4>
+                </div>
+                <div class="card-body">
+                    <div id="commentsSection">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <div class="add-comment-section">
+                        <h5>Add a Comment</h5>
+                        <form id="addCommentForm">
+                            <div class="mb-3">
+                                <textarea class="form-control" id="commentText" rows="3" placeholder="Write your comment here..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> Add Comment
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0"><i class="bi bi-clock-history"></i> Status History</h4>
+                </div>
+                <div class="card-body">
+                    <div id="historySection">
+                        <div class="text-center">
+                            <div class="spinner-border text-secondary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script>
+        $(document).ready(function() {
+            var issueId = '@Model.Id';
+            var token = localStorage.getItem('token');
+            
+            if (!token) {
+                window.location.href = '/Account/Login';
+                return;
+            }
+
+            var currentStatus = @((int)Model.Status);
+
+            // Load comments
+            loadComments();
+
+            // Load history
+            loadHistory();
+
+            // Load status transitions
+            loadStatusTransitions();
+
+            // Add comment form submission
+            $('#addCommentForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                var commentText = $('#commentText').val().trim();
+                if (!commentText) {
+                    console.error('Please enter a comment');
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/issues/' + issueId + '/comments',
+                    type: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({ comment: commentText }),
+                    success: function(response) {
+                        if (response.success) {
+                            $('#commentText').val('');
+                            loadComments();
+                        } else {
+                            console.error('Error: ' + response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 401) {
+                            console.error('Session expired. Please login again.');
+                            window.location.href = '/Account/Login';
+                        } else {
+                            console.error('Error adding comment: ' + (xhr.responseJSON?.message || 'Unknown error'));
+                        }
+                    }
+                });
+            });
+
+            function loadComments() {
+                $.ajax({
+                    url: '/api/issues/' + issueId + '/comments',
+                    type: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            displayComments(response.data);
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#commentsSection').html('<div class="alert alert-danger">Error loading comments</div>');
+                    }
+                });
+            }
+
+            function displayComments(comments) {
+                if (comments.length === 0) {
+                    $('#commentsSection').html('<p class="text-muted">No comments yet. Be the first to comment!</p>');
+                    return;
+                }
+
+                var html = '<div class="list-group">';
+                $.each(comments, function(index, comment) {
+                    var date = new Date(comment.created);
+                    var formattedDate = date.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+
+                    html += '<div class="list-group-item">';
+                    html += '<div class="d-flex w-100 justify-content-between">';
+                    html += '<h6 class="mb-1"><i class="bi bi-person-circle"></i> User: ' + comment.createdBy.substring(0, 8) + '</h6>';
+                    html += '<small class="text-muted">' + formattedDate + '</small>';
+                    html += '</div>';
+                    html += '<p class="mb-1 mt-2">' + comment.comment + '</p>';
+                    html += '</div>';
+                });
+                html += '</div>';
+
+                $('#commentsSection').html(html);
+            }
+
+            function loadHistory() {
+                $.ajax({
+                    url: '/api/issues/' + issueId + '/history',
+                    type: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            displayHistory(response.data);
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#historySection').html('<div class="alert alert-danger">Error loading history</div>');
+                    }
+                });
+            }
+
+            function displayHistory(history) {
+                if (history.length === 0) {
+                    $('#historySection').html('<p class="text-muted">No status changes yet.</p>');
+                    return;
+                }
+
+                var html = '<div class="timeline">';
+                $.each(history, function(index, item) {
+                    var date = new Date(item.created);
+                    var formattedDate = date.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+
+                    html += '<div class="mb-3 p-3 border-start border-3 border-secondary bg-light">';
+                    html += '<div class="d-flex justify-content-between">';
+                    html += '<strong><i class="bi bi-arrow-right-circle"></i> ' + item.fromStatusName + ' → ' + item.toStatusName + '</strong>';
+                    html += '<small class="text-muted">' + formattedDate + '</small>';
+                    html += '</div>';
+                    html += '<small class="text-muted">Changed by User: ' + item.createdBy.substring(0, 8) + '</small>';
+                    html += '</div>';
+                });
+                html += '</div>';
+
+                $('#historySection').html(html);
+            }
+
+            function loadStatusTransitions() {
+                // Status enum mapping
+                var statusNames = {
+                    0: 'Open',
+                    1: 'InProgress',
+                    2: 'Done',
+                    3: 'Reopened'
+                };
+                
+                var statusBadges = {
+                    0: 'primary',
+                    1: 'warning',
+                    2: 'success',
+                    3: 'info'
+                };
+                
+                var statusIcons = {
+                    0: 'bi-circle',
+                    1: 'bi-arrow-repeat',
+                    2: 'bi-check-circle',
+                    3: 'bi-arrow-clockwise'
+                };
+                
+                $.ajax({
+                    url: '/api/issues/' + issueId + '/allowed-transitions',
+                    type: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    success: function(response) {
+                        if (response.success && response.data) {
+                            var allowedStatuses = response.data;
+                            
+                            // Filter out current status
+                            allowedStatuses = allowedStatuses.filter(function(status) {
+                                return status !== currentStatus;
+                            });
+                            
+                            if (allowedStatuses.length > 0) {
+                                $('#statusTransitionsRow').show();
+                                
+                                // Create buttons for allowed transitions
+                                allowedStatuses.forEach(function(statusValue) {
+                                    var statusName = statusNames[statusValue];
+                                    var badgeClass = statusBadges[statusValue];
+                                    var icon = statusIcons[statusValue];
+                                    
+                                    var button = $('<button>')
+                                        .addClass('btn btn-' + badgeClass)
+                                        .attr('type', 'button')
+                                        .attr('data-status', statusValue)
+                                        .html('<i class="bi ' + icon + '"></i> Move to ' + statusName.replace('InProgress', 'In Progress'));
+                                    
+                                    button.on('click', function() {
+                                        transitionStatus(statusValue, statusName);
+                                    });
+                                    
+                                    $('#statusTransitionButtons').append(button);
+                                });
+                            }
+                        }
+                    },
+                    error: function() {
+                        console.warn('Could not load workflow restrictions.');
+                    }
+                });
+            }
+
+            function transitionStatus(newStatus, statusName) {
+                if (!confirm('Move this issue to ' + statusName.replace('InProgress', 'In Progress') + '?')) {
+                    return;
+                }
+                
+                $.ajax({
+                    url: '/api/issues/' + issueId + '/transition',
+                    type: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({
+                        Status: newStatus
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            console.error('Error: ' + response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        var errorMsg = 'An error occurred';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        console.error(errorMsg);
+                    }
+                });
+            }
+        });
+    </script>
+}

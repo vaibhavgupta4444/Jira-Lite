@@ -91,6 +91,7 @@
                 success: function(response) {
                     if (response.success) {
                         localStorage.setItem('token', response.data.token);
+                        localStorage.setItem('userId', response.data.userId);
                         localStorage.setItem('userEmail', response.data.email);
                         localStorage.setItem('userName', response.data.name);
                         localStorage.setItem('userRole', response.data.role);

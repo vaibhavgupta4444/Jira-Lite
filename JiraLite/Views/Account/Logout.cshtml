@@ -40,11 +40,20 @@
             // Clear session storage as well (if used)
             sessionStorage.clear();
             
-            // Redirect to login page after a brief delay
-            setTimeout(function() {
-                window.location.href = '/Account/Login';
-            }, 1000);
+            // Submit POST request to clear server-side session
+            $.ajax({
+                url: '/Account/LogoutConfirm',
+                type: 'POST',
+                data: {
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                complete: function() {
+                    // Redirect to login page
+                    window.location.href = '/Account/Login';
+                }
+            });
         });
     </script>
+    @Html.AntiForgeryToken()
 </body>
 </html>
